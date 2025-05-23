@@ -2,11 +2,13 @@ package by.lupach.questionnaireportal.services;
 
 import by.lupach.questionnaireportal.dtos.*;
 import by.lupach.questionnaireportal.exceptions.InvalidCurrentPasswordException;
+import by.lupach.questionnaireportal.exceptions.InvalidVerificationCodeException;
 import lombok.RequiredArgsConstructor;
 import by.lupach.questionnaireportal.models.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -88,17 +90,27 @@ public class AuthenticationService {
     public void updatePassword(UpdatePasswordDTO updatePasswordDTO) {
         User user = getCurrentUser();
 
-        if (passwordEncoder.encode(user.getPassword()).equals(updatePasswordDTO.getCurrentPassword())) {
+        // Verify current password first
+        if (!passwordEncoder.matches(updatePasswordDTO.getCurrentPassword(), user.getPassword())) {
             throw new InvalidCurrentPasswordException("Current password doesn't match");
         }
 
+//        // Verify the code
+//        if (!verificationCodeService.validateCode(user.getEmail(), updatePasswordDTO.getVerificationCode())) {
+//            throw new InvalidVerificationCodeException("Invalid verification code");
+//        }
+
         user.setPassword(passwordEncoder.encode(updatePasswordDTO.getNewPassword()));
-
         userService.save(user);
-
         emailService.sendPasswordSuccessfullyChangedMessage(user.getEmail(), user.getFirstName());
     }
 
+
+    public void updatePasswordVerifyEmail(UserDetails userDetails){
+        String email = userDetails.getUsername();
+        String code = verificationCodeService.generateVerificationCode(email);
+        emailService.sendVerificationEmail(email, code);
+    }
 
 
     public User getCurrentUser() {
