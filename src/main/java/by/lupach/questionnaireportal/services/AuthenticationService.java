@@ -18,24 +18,40 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final VerificationCodeService verificationCodeService;
 
 
     public AuthResponseDTO signUp(SignUpRequestDTO request) {
+        // Generate verification code
+        String verificationCode = verificationCodeService.generateVerificationCode(request.getEmail());
 
+        // Send email with verification code
+        emailService.sendVerificationEmail(request.getEmail(), verificationCode);
+
+        // Save user data temporarily (you might need a temporary storage solution)
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
+                .enabled(false) // User is not enabled until email is verified
                 .build();
 
         userService.create(user);
 
-        emailService.sendRegistrationMessage(user.getEmail(), user.getFirstName());
+        return new AuthResponseDTO(null, user.getEmail(), user.getFirstName(),
+                user.getLastName(), user.getPhoneNumber());
+    }
 
-        String token = jwtService.generateToken(user);
-        return new AuthResponseDTO(token, user.getEmail(), user.getFirstName(), user.getLastName(), user.getPhoneNumber());
+    public boolean verifyEmail(String email, String code) {
+        if (verificationCodeService.validateCode(email, code)) {
+            User user = userService.getByEmail(email);
+            user.setEnabled(true);
+            userService.save(user);
+            return true;
+        }
+        return false;
     }
 
 
