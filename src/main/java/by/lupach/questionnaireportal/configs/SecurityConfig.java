@@ -42,7 +42,12 @@ public class SecurityConfig {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("api/**").permitAll()
+                        .requestMatchers(
+                                "/api/**",
+                                "/ws-responses/**",
+                                "/topic/**",
+                                "/app/**"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

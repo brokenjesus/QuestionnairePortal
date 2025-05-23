@@ -3,14 +3,14 @@ package by.lupach.questionnaireportal.services;
 import by.lupach.questionnaireportal.dtos.FieldDTO;
 import by.lupach.questionnaireportal.dtos.QuestionnaireDTO;
 import by.lupach.questionnaireportal.models.Field;
-import by.lupach.questionnaireportal.models.FieldType;
 import by.lupach.questionnaireportal.models.Questionnaire;
 import by.lupach.questionnaireportal.models.User;
 import by.lupach.questionnaireportal.repositories.QuestionnaireRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,13 +88,24 @@ public class QuestionnaireService {
                 .collect(Collectors.toList());
     }
 
-    public QuestionnaireDTO getById(Long id, User author) {
+    @Transactional
+    public QuestionnaireDTO getByIdAndAuthor(Long id, User author) {
         Questionnaire questionnaire = questionnaireRepository.findByIdAndAuthor(id, author);
         if (questionnaire == null) {
             throw new RuntimeException("Questionnaire not found or you don't have permission to view it");
         }
         return convertToDTO(questionnaire);
     }
+
+    @Transactional
+    public QuestionnaireDTO getById(Long id) {
+        Optional<Questionnaire> questionnaire = questionnaireRepository.findById(id);
+        if (questionnaire.isEmpty()) {
+            throw new RuntimeException("Questionnaire not found or you don't have permission to view it");
+        }
+        return convertToDTO(questionnaire.orElse(null));
+    }
+
 
     private QuestionnaireDTO convertToDTO(Questionnaire questionnaire) {
         QuestionnaireDTO dto = new QuestionnaireDTO();

@@ -38,8 +38,8 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "author")
     private List<Questionnaire> questionnaires;
 
-    @OneToMany(mappedBy = "respondent")
-    private List<Response> responses;
+//    @OneToMany(mappedBy = "respondent")
+//    private List<Response> responses;
 
     private boolean enabled = false;
 
