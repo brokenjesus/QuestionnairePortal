@@ -103,7 +103,7 @@ public class QuestionnaireController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Questionnaires retrieved successfully")
     })
-    @GetMapping
+    @GetMapping("/my")
     public ResponseEntity<?> getAllByAuthor(
             @Parameter(description = "Page number (optional)", required = false)
             @RequestParam(required = false) Integer page,
@@ -120,6 +120,22 @@ public class QuestionnaireController {
             List<QuestionnaireDTO> questionnaires = questionnaireService.getAllByAuthor(author);
             return ResponseEntity.ok(questionnaires);
         }
+    }
+
+    @Operation(summary = "Get all questionnaires",
+            description = "Get all questionnaires, paginated")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Questionnaires retrieved successfully")
+    })
+    @GetMapping("/all")
+    public ResponseEntity<?> getAll(
+            @Parameter(description = "Page number", required = true)
+            @RequestParam(required = false) Integer page,
+
+            @Parameter(description = "Page size", required = true)
+            @RequestParam(required = false) Integer size) {
+        PageResponseDTO<QuestionnaireDTO> questionnaires = questionnaireService.getAll(page, size);
+        return ResponseEntity.ok(questionnaires);
     }
 
     @Operation(summary = "Get questionnaire by ID", description = "Get a specific questionnaire by its ID")

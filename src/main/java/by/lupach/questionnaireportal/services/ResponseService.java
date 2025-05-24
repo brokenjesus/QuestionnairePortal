@@ -15,7 +15,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,51 +51,28 @@ public class ResponseService {
 
         response = responseRepository.save(response);
 
-        Map<String, Object> updatedData = getResponsesData(dto.getQuestionnaireId());
+        Page<Response> lastPage = responseRepository.findByQuestionnaireIdWithAnswers(dto.getQuestionnaireId(), PageRequest.of(0, 10) );
+        PageResponseDTO<ResponseAnswerDTO> updatedData = getResponsesDataPaginated(dto.getQuestionnaireId(), lastPage.getTotalPages()-1,10);
         messagingTemplate.convertAndSend("/topic/responses", updatedData);
 
         return response;
-    }
-
-    public List<Response> getResponsesByQuestionnaireId(Long questionnaireId) {
-        return responseRepository.findByQuestionnaireIdWithAnswers(questionnaireId);
-    }
-
-    public Map<String, Object> getResponsesData(Long questionnaireId) {
-        List<Response> respons = getResponsesByQuestionnaireId(questionnaireId);
-        QuestionnaireDTO questionnaire = questionnaireService.getById(questionnaireId);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("questionnaireId", questionnaireId);
-        result.put("questionnaireTitle", questionnaire.getName());
-
-        List<String> fields = questionnaire.getFields().stream()
-                .map(FieldDTO::getLabel)
-                .collect(Collectors.toList());
-        result.put("fields", fields);
-
-        List<Map<String, String>> tableData = respons.stream().map(response -> {
-            Map<String, String> row = new HashMap<>();
-            response.getAnswers().forEach(answer -> {
-                row.put(answer.getField().getLabel(), answer.getAnswer());
-            });
-            return row;
-        }).collect(Collectors.toList());
-
-        result.put("data", tableData);
-        return result;
     }
 
     public PageResponseDTO<ResponseAnswerDTO> getResponsesDataPaginated(Long questionnaireId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Response> responsePage = responseRepository.findByQuestionnaireIdWithAnswers(questionnaireId, pageable);
 
+        List<FieldDTO> allFields = questionnaireService.getById(questionnaireId).getFields();
+
         List<ResponseAnswerDTO> content = responsePage.getContent().stream().map(response -> {
-            Map<String, String> answersMap = response.getAnswers().stream()
+            Map<String, String> answersMap = allFields.stream()
                     .collect(Collectors.toMap(
-                            a -> a.getField().getLabel(),
-                            ResponseFieldAnswer::getAnswer
+                            FieldDTO::getLabel,
+                            f -> ""
                     ));
+
+            response.getAnswers().forEach(answer -> answersMap.put(answer.getField().getLabel(), answer.getAnswer()));
+
             return new ResponseAnswerDTO(answersMap);
         }).collect(Collectors.toList());
 
@@ -110,5 +86,6 @@ public class ResponseService {
 
         return pageResponse;
     }
+
 
 }

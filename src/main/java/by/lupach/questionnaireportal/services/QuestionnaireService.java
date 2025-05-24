@@ -122,20 +122,30 @@ public class QuestionnaireService {
         );
     }
 
+    public PageResponseDTO<QuestionnaireDTO> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Questionnaire> questionnairePage = questionnaireRepository.findAll(pageable);
+
+        List<QuestionnaireDTO> questionnaireDTOs = questionnairePage.stream()
+                .map(this::convertToDTO)
+                .toList();
+
+        return new PageResponseDTO<>(
+                questionnaireDTOs,
+                questionnairePage.getNumber(),
+                questionnairePage.getSize(),
+                questionnairePage.getTotalElements(),
+                questionnairePage.getTotalPages(),
+                questionnairePage.isLast()
+        );
+    }
+
     public List<QuestionnaireDTO> getAllByAuthor(User author) {
         return questionnaireRepository.findByAuthor(author).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    @Transactional
-    public QuestionnaireDTO getByIdAndAuthor(Long id, User author) {
-        Questionnaire questionnaire = questionnaireRepository.findByIdAndAuthor(id, author);
-        if (questionnaire == null) {
-            throw new RuntimeException("Questionnaire not found or you don't have permission to view it");
-        }
-        return convertToDTO(questionnaire);
-    }
 
     @Transactional
     public QuestionnaireDTO getById(Long id) {
