@@ -4,13 +4,12 @@ import by.lupach.questionnaireportal.repositories.EmailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService implements EmailRepository {
-    private final JavaMailSender mailSender; // Let Spring inject the configured instance
+    private final JavaMailSender mailSender;
 
     public void sendRegistrationMessage(String email, String firstName) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -33,7 +32,7 @@ public class EmailService implements EmailRepository {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject("Password changed Questionnaire Portal");
-        message.setText(String.format("Dear %s,\n\nYou have successfully changed your password in our Questionnaire Portal!\n\nBest regards,\nQuestionnaire Portal Team", firstName));
+        message.setText(String.format("Dear %s,\n\nYou have successfully changed your newPassword in our Questionnaire Portal!\n\nBest regards,\nQuestionnaire Portal Team", firstName));
 
         mailSender.send(message);
     }

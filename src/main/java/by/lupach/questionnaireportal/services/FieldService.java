@@ -1,13 +1,14 @@
 package by.lupach.questionnaireportal.services;
 
 import by.lupach.questionnaireportal.dtos.FieldDTO;
+import by.lupach.questionnaireportal.dtos.PageResponseDTO;
 import by.lupach.questionnaireportal.exceptions.NotFoundException;
 import by.lupach.questionnaireportal.models.Field;
 import by.lupach.questionnaireportal.models.FieldOption;
 import by.lupach.questionnaireportal.models.User;
 import by.lupach.questionnaireportal.repositories.FieldOptionRepository;
 import by.lupach.questionnaireportal.repositories.FieldRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,25 +20,32 @@ import java.util.stream.Collectors;
 @Service
 public class FieldService {
 
-    @Autowired
-    private FieldRepository fieldRepository;
-    @Autowired
-    private FieldOptionRepository fieldOptionRepository;
-    @Autowired
-    private AuthenticationService authenticationService;
+    private final FieldRepository fieldRepository;
+    private final FieldOptionRepository fieldOptionRepository;
+    private final AuthenticationService authenticationService;
 
-    public List<FieldDTO> getAllFields(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return fieldRepository.findAll(pageable).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public FieldService(FieldRepository fieldRepository, FieldOptionRepository fieldOptionRepository, AuthenticationService authenticationService) {
+        this.fieldRepository = fieldRepository;
+        this.fieldOptionRepository = fieldOptionRepository;
+        this.authenticationService = authenticationService;
     }
 
-    public List<FieldDTO> getAllFieldsByAuthor(int page, int size, User author) {
+    public PageResponseDTO<FieldDTO> getAllFieldsByAuthor(int page, int size, User author) {
         Pageable pageable = PageRequest.of(page, size);
-        return fieldRepository.findByAuthor(author, pageable).stream()
+        Page<Field> fieldsPage = fieldRepository.findByAuthor(author, pageable);
+
+        List<FieldDTO> fieldDTOs = fieldsPage.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+
+        return new PageResponseDTO<>(
+                fieldDTOs,
+                fieldsPage.getNumber(),
+                fieldsPage.getSize(),
+                fieldsPage.getTotalElements(),
+                fieldsPage.getTotalPages(),
+                fieldsPage.isLast()
+        );
     }
 
     public List<FieldDTO> getActiveFields() {
@@ -72,7 +80,6 @@ public class FieldService {
 
     @Transactional
     public void createField(FieldDTO fieldDTO) {
-        // 1. Создаем и сохраняем Field без опций
         Field field = Field.builder()
                 .author(authenticationService.getCurrentUser())
                 .label(fieldDTO.getLabel())
@@ -153,29 +160,4 @@ public class FieldService {
 
         return dto;
     }
-
-    public Field convertToEntity(FieldDTO fieldDTO) {
-        Field field = new Field();
-        field.setId(fieldDTO.getId());
-        field.setLabel(fieldDTO.getLabel());
-        field.setType(fieldDTO.getType());
-        field.setRequired(fieldDTO.isRequired());
-        field.setActive(fieldDTO.isActive());
-
-        // Convert options if present
-        if (fieldDTO.getOptions() != null && !fieldDTO.getOptions().isEmpty()) {
-            List<FieldOption> options = fieldDTO.getOptions().stream()
-                    .map(optionValue -> {
-                        FieldOption option = new FieldOption();
-                        option.setValue(optionValue);
-                        option.setField(field);  // Set back reference
-                        return option;
-                    })
-                    .collect(Collectors.toList());
-            field.setOptions(options);
-        }
-
-        return field;
-    }
-
 }

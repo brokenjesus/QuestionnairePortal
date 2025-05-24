@@ -1,5 +1,6 @@
 package by.lupach.questionnaireportal.dtos;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,15 +8,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateProfileDTO {
-    @NotBlank
+
+    @Schema(description = "User's first name", example = "John")
     private String firstName;
 
-    @NotBlank
+    @Schema(description = "User's last name", example = "Doe")
     private String lastName;
 
-    @NotBlank
+    @Schema(description = "User's email address", example = "john.doe@example.com")
     private String email;
 
-    @NotBlank
+    @Schema(description = "User's phone number", example = "+1234567890")
     private String phoneNumber;
 }

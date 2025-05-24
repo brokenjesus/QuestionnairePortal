@@ -1,8 +1,6 @@
 package by.lupach.questionnaireportal.services;
 
-import by.lupach.questionnaireportal.dtos.QuestionnaireDTO;
-import by.lupach.questionnaireportal.dtos.FieldDTO;
-import by.lupach.questionnaireportal.dtos.ResponseDTO;
+import by.lupach.questionnaireportal.dtos.*;
 import by.lupach.questionnaireportal.models.Questionnaire;
 import by.lupach.questionnaireportal.models.Response;
 import by.lupach.questionnaireportal.models.ResponseFieldAnswer;
@@ -10,6 +8,9 @@ import by.lupach.questionnaireportal.repositories.FieldRepository;
 import by.lupach.questionnaireportal.repositories.QuestionnaireRepository;
 import by.lupach.questionnaireportal.repositories.ResponseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +52,6 @@ public class ResponseService {
 
         response = responseRepository.save(response);
 
-        // После сохранения отправляем обновленные данные всем подписчикам
         Map<String, Object> updatedData = getResponsesData(dto.getQuestionnaireId());
         messagingTemplate.convertAndSend("/topic/responses", updatedData);
 
@@ -63,8 +63,8 @@ public class ResponseService {
     }
 
     public Map<String, Object> getResponsesData(Long questionnaireId) {
-        List<Response> responses = getResponsesByQuestionnaireId(questionnaireId);
-        QuestionnaireDTO questionnaire = questionnaireService.getById(questionnaireId); // без author
+        List<Response> respons = getResponsesByQuestionnaireId(questionnaireId);
+        QuestionnaireDTO questionnaire = questionnaireService.getById(questionnaireId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("questionnaireId", questionnaireId);
@@ -75,7 +75,7 @@ public class ResponseService {
                 .collect(Collectors.toList());
         result.put("fields", fields);
 
-        List<Map<String, String>> tableData = responses.stream().map(response -> {
+        List<Map<String, String>> tableData = respons.stream().map(response -> {
             Map<String, String> row = new HashMap<>();
             response.getAnswers().forEach(answer -> {
                 row.put(answer.getField().getLabel(), answer.getAnswer());
@@ -86,4 +86,29 @@ public class ResponseService {
         result.put("data", tableData);
         return result;
     }
+
+    public PageResponseDTO<ResponseAnswerDTO> getResponsesDataPaginated(Long questionnaireId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Response> responsePage = responseRepository.findByQuestionnaireIdWithAnswers(questionnaireId, pageable);
+
+        List<ResponseAnswerDTO> content = responsePage.getContent().stream().map(response -> {
+            Map<String, String> answersMap = response.getAnswers().stream()
+                    .collect(Collectors.toMap(
+                            a -> a.getField().getLabel(),
+                            ResponseFieldAnswer::getAnswer
+                    ));
+            return new ResponseAnswerDTO(answersMap);
+        }).collect(Collectors.toList());
+
+        PageResponseDTO<ResponseAnswerDTO> pageResponse = new PageResponseDTO<>();
+        pageResponse.setContent(content);
+        pageResponse.setPageNumber(responsePage.getNumber());
+        pageResponse.setPageSize(responsePage.getSize());
+        pageResponse.setTotalElements(responsePage.getTotalElements());
+        pageResponse.setTotalPages(responsePage.getTotalPages());
+        pageResponse.setLast(responsePage.isLast());
+
+        return pageResponse;
+    }
+
 }

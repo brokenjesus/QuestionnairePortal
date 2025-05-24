@@ -1,5 +1,6 @@
 package by.lupach.questionnaireportal.services;
 
+import by.lupach.questionnaireportal.exceptions.InvalidVerificationCodeException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,13 +25,13 @@ public class VerificationCodeService {
         LocalDateTime expiryTime = codeExpiryMap.get(email);
 
         if (storedCode == null || expiryTime == null) {
-            return false;
+            throw new InvalidVerificationCodeException("Invalid verification code");
         }
 
         if (LocalDateTime.now().isAfter(expiryTime)) {
             emailToCodeMap.remove(email);
             codeExpiryMap.remove(email);
-            return false;
+            throw new InvalidVerificationCodeException("Verification code expired");
         }
 
         return storedCode.equals(code);

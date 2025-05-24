@@ -1,13 +1,11 @@
 package by.lupach.questionnaireportal.services;
 
+import by.lupach.questionnaireportal.exceptions.UserNotFoundException;
 import by.lupach.questionnaireportal.models.User;
 import by.lupach.questionnaireportal.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,14 +28,13 @@ public class UserService {
     }
 
     public User getById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
     }
-
 
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с email " + email + " не найден"));
     }
 
 

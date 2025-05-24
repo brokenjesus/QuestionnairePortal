@@ -2,9 +2,8 @@ package by.lupach.questionnaireportal.services;
 
 import by.lupach.questionnaireportal.dtos.*;
 import by.lupach.questionnaireportal.exceptions.InvalidCurrentPasswordException;
-import by.lupach.questionnaireportal.exceptions.InvalidVerificationCodeException;
-import lombok.RequiredArgsConstructor;
 import by.lupach.questionnaireportal.models.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,27 +22,21 @@ public class AuthenticationService {
     private final VerificationCodeService verificationCodeService;
 
 
-    public AuthResponseDTO signUp(SignUpRequestDTO request) {
-        // Generate verification code
+    public void signUp(SignUpRequestDTO request) {
         String verificationCode = verificationCodeService.generateVerificationCode(request.getEmail());
 
-        // Send email with verification code
         emailService.sendVerificationEmail(request.getEmail(), verificationCode);
 
-        // Save user data temporarily (you might need a temporary storage solution)
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
-                .enabled(false) // User is not enabled until email is verified
+                .enabled(false)
                 .build();
 
         userService.create(user);
-
-        return new AuthResponseDTO(null, user.getEmail(), user.getFirstName(),
-                user.getLastName(), user.getPhoneNumber());
     }
 
     public boolean verifyEmail(String email, String code) {
@@ -90,15 +83,9 @@ public class AuthenticationService {
     public void updatePassword(UpdatePasswordDTO updatePasswordDTO) {
         User user = getCurrentUser();
 
-        // Verify current password first
         if (!passwordEncoder.matches(updatePasswordDTO.getCurrentPassword(), user.getPassword())) {
-            throw new InvalidCurrentPasswordException("Current password doesn't match");
+            throw new InvalidCurrentPasswordException("Current newPassword doesn't match");
         }
-
-//        // Verify the code
-//        if (!verificationCodeService.validateCode(user.getEmail(), updatePasswordDTO.getVerificationCode())) {
-//            throw new InvalidVerificationCodeException("Invalid verification code");
-//        }
 
         user.setPassword(passwordEncoder.encode(updatePasswordDTO.getNewPassword()));
         userService.save(user);
@@ -106,8 +93,21 @@ public class AuthenticationService {
     }
 
 
+    public void updatePassword(ForgotPasswordDTO forgotPasswordDTO) {
+        User user = userService.getByEmail(forgotPasswordDTO.getEmail());
+
+        user.setPassword(passwordEncoder.encode(forgotPasswordDTO.getNewPassword()));
+        userService.save(user);
+        emailService.sendPasswordSuccessfullyChangedMessage(user.getEmail(), user.getFirstName());
+    }
+
+
     public void updatePasswordVerifyEmail(UserDetails userDetails){
         String email = userDetails.getUsername();
+        changePasswordSendVerificationEmail(email);
+    }
+
+    public void changePasswordSendVerificationEmail(String email) {
         String code = verificationCodeService.generateVerificationCode(email);
         emailService.sendVerificationEmail(email, code);
     }

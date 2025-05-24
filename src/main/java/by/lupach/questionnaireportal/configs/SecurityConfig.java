@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/api/**",
                                 "/ws-responses/**",
                                 "/topic/**",
-                                "/app/**"
+                                "/app/**",
+                                "/swagger-ui/**"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

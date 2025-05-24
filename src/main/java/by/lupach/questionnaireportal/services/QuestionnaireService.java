@@ -1,9 +1,11 @@
 package by.lupach.questionnaireportal.services;
 
 import by.lupach.questionnaireportal.dtos.FieldDTO;
+import by.lupach.questionnaireportal.dtos.PageResponseDTO;
 import by.lupach.questionnaireportal.dtos.QuestionnaireDTO;
 import by.lupach.questionnaireportal.models.*;
 import by.lupach.questionnaireportal.repositories.QuestionnaireRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,17 +19,11 @@ import java.util.stream.Collectors;
 public class QuestionnaireService {
     private final QuestionnaireRepository questionnaireRepository;
     private final FieldService fieldService;
-    private final UserService userService;
-    private final AuthenticationService authenticationService;
 
     public QuestionnaireService(QuestionnaireRepository questionnaireRepository,
-                                FieldService fieldService,
-                                UserService userService,
-                                AuthenticationService authenticationService) {
+                                FieldService fieldService) {
         this.questionnaireRepository = questionnaireRepository;
         this.fieldService = fieldService;
-        this.userService = userService;
-        this.authenticationService = authenticationService;
     }
 
     public QuestionnaireDTO create(QuestionnaireDTO questionnaireDTO, User author) {
@@ -108,11 +104,22 @@ public class QuestionnaireService {
         questionnaireRepository.delete(questionnaire);
     }
 
-    public List<QuestionnaireDTO> getAllByAuthor(User author, int page, int size) {
+    public PageResponseDTO<QuestionnaireDTO> getAllByAuthor(User author, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return questionnaireRepository.findByAuthor(author, pageable).stream()
+        Page<Questionnaire> questionnairePage = questionnaireRepository.findByAuthor(author, pageable);
+
+        List<QuestionnaireDTO> questionnaireDTOs = questionnairePage.stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
+
+        return new PageResponseDTO<>(
+                questionnaireDTOs,
+                questionnairePage.getNumber(),
+                questionnairePage.getSize(),
+                questionnairePage.getTotalElements(),
+                questionnairePage.getTotalPages(),
+                questionnairePage.isLast()
+        );
     }
 
     public List<QuestionnaireDTO> getAllByAuthor(User author) {

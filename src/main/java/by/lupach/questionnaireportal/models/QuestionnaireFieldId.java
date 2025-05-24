@@ -1,5 +1,6 @@
 package by.lupach.questionnaireportal.models;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
@@ -10,8 +11,13 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Embeddable
+@Schema(description = "Composite key for QuestionnaireField entity")
 public class QuestionnaireFieldId implements Serializable {
+
+    @Schema(description = "ID of the questionnaire", example = "1")
     private Long questionnaireId;
+
+    @Schema(description = "ID of the field", example = "10")
     private Long fieldId;
 
     @Override
