@@ -25,13 +25,9 @@ public class Questionnaire {
     @JoinColumn(name = "user_id", nullable = false)
     private User author;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    @JoinTable(
-            name = "questionnaire_fields",
-            joinColumns = @JoinColumn(name = "questionnaire_id"),
-            inverseJoinColumns = @JoinColumn(name = "field_id")
-    )
-    private List<Field> fields;
+    @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuestionnaireField> questionnaireFields;
+
 
     @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL)
     private List<Response> responses;

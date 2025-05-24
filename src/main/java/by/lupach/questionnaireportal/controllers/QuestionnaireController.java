@@ -59,9 +59,17 @@ public class QuestionnaireController {
 
     @GetMapping
     public ResponseEntity<List<QuestionnaireDTO>> getAllByAuthor(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @AuthenticationPrincipal User author) {
-        List<QuestionnaireDTO> questionnaires = questionnaireService.getAllByAuthor(author);
-        return ResponseEntity.ok(questionnaires);
+
+        if (page != null && size != null) {
+            List<QuestionnaireDTO> questionnaires = questionnaireService.getAllByAuthor(author, page, size);
+            return ResponseEntity.ok(questionnaires);
+        } else {
+            List<QuestionnaireDTO> questionnaires = questionnaireService.getAllByAuthor(author);
+            return ResponseEntity.ok(questionnaires);
+        }
     }
 
     @GetMapping("/{id}")

@@ -13,4 +13,5 @@ public class FieldDTO {
     private boolean isRequired;
     private boolean isActive;
     private List<String> options;
+//    private int order;
 }

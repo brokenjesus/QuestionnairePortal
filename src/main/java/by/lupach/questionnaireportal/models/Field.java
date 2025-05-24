@@ -41,7 +41,7 @@ public class Field {
     @OneToMany(mappedBy = "field", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FieldOption> options = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "fields")
-    private List<Questionnaire> questionnaires;
+    @OneToMany(mappedBy = "field", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuestionnaireField> questionnaireFields;
 
 }
