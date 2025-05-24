@@ -67,7 +67,6 @@ public class FieldService {
     }
 
 
-
     public FieldDTO getFieldDTOById(Long id) {
         Field field = fieldRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Field not found with id: " + id));

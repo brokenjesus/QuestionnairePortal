@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface QuestionnaireRepository extends JpaRepository<Questionnaire, Long> {
     Page<Questionnaire> findByAuthor(User author, Pageable pageable);
+
     List<Questionnaire> findByAuthor(User author);
+
     Questionnaire findByIdAndAuthor(Long id, User author);
 }

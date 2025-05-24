@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface FieldOptionRepository extends JpaRepository<FieldOption, Long> {
     List<FieldOption> findByFieldId(Long fieldId);
+
     void deleteByFieldId(Long fieldId);
 }

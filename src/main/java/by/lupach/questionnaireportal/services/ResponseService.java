@@ -1,6 +1,9 @@
 package by.lupach.questionnaireportal.services;
 
-import by.lupach.questionnaireportal.dtos.*;
+import by.lupach.questionnaireportal.dtos.FieldDTO;
+import by.lupach.questionnaireportal.dtos.PageResponseDTO;
+import by.lupach.questionnaireportal.dtos.ResponseAnswerDTO;
+import by.lupach.questionnaireportal.dtos.ResponseDTO;
 import by.lupach.questionnaireportal.models.Questionnaire;
 import by.lupach.questionnaireportal.models.Response;
 import by.lupach.questionnaireportal.models.ResponseFieldAnswer;
@@ -51,8 +54,8 @@ public class ResponseService {
 
         response = responseRepository.save(response);
 
-        Page<Response> lastPage = responseRepository.findByQuestionnaireIdWithAnswers(dto.getQuestionnaireId(), PageRequest.of(0, 10) );
-        PageResponseDTO<ResponseAnswerDTO> updatedData = getResponsesDataPaginated(dto.getQuestionnaireId(), lastPage.getTotalPages()-1,10);
+        Page<Response> lastPage = responseRepository.findByQuestionnaireIdWithAnswers(dto.getQuestionnaireId(), PageRequest.of(0, 10));
+        PageResponseDTO<ResponseAnswerDTO> updatedData = getResponsesDataPaginated(dto.getQuestionnaireId(), lastPage.getTotalPages() - 1, 10);
         messagingTemplate.convertAndSend("/topic/responses", updatedData);
 
         return response;

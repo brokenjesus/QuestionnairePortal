@@ -102,7 +102,7 @@ public class AuthenticationService {
     }
 
 
-    public void updatePasswordVerifyEmail(UserDetails userDetails){
+    public void updatePasswordVerifyEmail(UserDetails userDetails) {
         String email = userDetails.getUsername();
         changePasswordSendVerificationEmail(email);
     }

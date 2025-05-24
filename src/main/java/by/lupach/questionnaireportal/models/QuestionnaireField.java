@@ -1,9 +1,11 @@
 package by.lupach.questionnaireportal.models;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
