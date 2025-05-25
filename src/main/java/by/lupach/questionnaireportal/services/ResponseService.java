@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.LinkedHashMap;
 
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,9 @@ public class ResponseService {
             Map<String, String> answersMap = allFields.stream()
                     .collect(Collectors.toMap(
                             FieldDTO::getLabel,
-                            f -> ""
+                            f -> "",
+                            (existing, replacement) -> existing,
+                            LinkedHashMap::new
                     ));
 
             response.getAnswers().forEach(answer -> answersMap.put(answer.getField().getLabel(), answer.getAnswer()));
